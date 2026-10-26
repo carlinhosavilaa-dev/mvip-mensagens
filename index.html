@@ -38,7 +38,7 @@
     </script>
     
     <style>
-        /* Custom Scrollbar for a premium look */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #050505; }
         ::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 4px; }
@@ -53,18 +53,14 @@
     <!-- Header -->
     <header class="bg-app-bg border-b border-app-border sticky top-0 z-30">
         <div class="max-w-5xl mx-auto px-6 h-24 flex items-center justify-between">
-            
             <!-- Logo Box -->
             <div class="relative flex items-baseline cursor-pointer group select-none pt-4" onclick="showView('dashboard')">
-                <!-- Crown (Absolute Positioned over 'M') -->
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute top-0 left-0 w-[22px] h-[22px] text-app-gold fill-current">
                     <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
                 </svg>
-                <!-- MVIP -->
                 <span class="text-2xl font-bold tracking-widest leading-none">
                     <span class="text-app-red">M</span><span class="text-app-gold">VIP</span>
                 </span>
-                <!-- MENSAGENS -->
                 <span class="text-2xl text-white/60 font-light tracking-widest uppercase ml-3 leading-none transition-colors duration-300 group-hover:text-white/80">
                     MENSAGENS
                 </span>
@@ -85,8 +81,7 @@
 
     <!-- Main Content -->
     <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-10 relative z-10">
-        
-        <!-- DASHBOARD VIEW (List of categories) -->
+        <!-- DASHBOARD VIEW -->
         <div id="dashboardView" class="block animate-fade-in">
             <div class="flex items-center justify-between mb-8">
                 <h1 class="text-xl font-medium text-white/90">Categorias</h1>
@@ -101,17 +96,11 @@
                 <svg class="animate-spin h-8 w-8 text-app-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             </div>
 
-            <!-- Grid -->
-            <div id="categoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 hidden">
-                <!-- Cards will be injected here via JS -->
-            </div>
-            
-            <div id="emptyState" class="hidden text-center py-20 text-app-muted font-light">
-                Nenhuma categoria ou mensagem encontrada.
-            </div>
+            <div id="categoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 hidden"></div>
+            <div id="emptyState" class="hidden text-center py-20 text-app-muted font-light">Nenhuma categoria encontrada.</div>
         </div>
 
-        <!-- DETAIL VIEW (Reading a message) -->
+        <!-- DETAIL VIEW -->
         <div id="detailView" class="hidden animate-fade-in">
             <button onclick="showView('dashboard')" class="text-app-muted hover:text-white flex items-center gap-2 mb-8 transition-colors text-sm uppercase tracking-wider font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -132,7 +121,6 @@
                 </div>
                 
                 <div class="w-12 h-0.5 bg-app-red mb-8"></div>
-                
                 <div id="detailContent" class="text-app-text/90 font-light leading-relaxed whitespace-pre-wrap mb-10 text-lg"></div>
 
                 <div class="border-t border-app-border pt-6 flex justify-end">
@@ -145,7 +133,7 @@
         </div>
     </main>
 
-    <!-- MODAL (Add/Edit) -->
+    <!-- MODAL -->
     <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
         <div id="modalContent" class="bg-app-card border border-app-border rounded-lg w-full max-w-lg scale-95 transition-transform duration-300 p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -154,13 +142,11 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            
             <input type="hidden" id="editId">
-            
             <div class="space-y-5">
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Nome da Categoria</label>
-                    <input type="text" id="inputTitle" placeholder="Ex: Fotos, Boas Vindas..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                    <input type="text" id="inputTitle" placeholder="Ex: Boas Vindas..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Conteúdo da Mensagem</label>
@@ -168,9 +154,7 @@
                 </div>
                 <div class="pt-4 flex justify-end gap-3">
                     <button onclick="closeModal()" class="px-5 py-2.5 text-sm font-medium text-app-muted hover:text-white transition-colors">Cancelar</button>
-                    <button onclick="saveMessage()" id="saveBtn" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
-                        Salvar
-                    </button>
+                    <button onclick="saveMessage()" id="saveBtn" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">Salvar</button>
                 </div>
             </div>
         </div>
@@ -182,71 +166,54 @@
         <span id="toastMsg" class="font-medium text-sm">Copiado com sucesso!</span>
     </div>
 
-    <!-- CORE LOGIC & FIREBASE -->
+    <!-- FIREBASE REALTIME DATABASE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Global Setup
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mvip-mensagens';
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            // Provide a dummy config to prevent crashing if missing in test environments
-            apiKey: "dummy", authDomain: "dummy", projectId: "dummy", storageBucket: "dummy", messagingSenderId: "dummy", appId: "dummy"
+        // Configuração exata do seu projeto
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg2qDh3CfJPAbYxFmUz1P3xumUSivAD6I",
+            authDomain: "mvip-mensagens.firebaseapp.com",
+            projectId: "mvip-mensagens",
+            databaseURL: "https://mvip-mensagens-default-rtdb.firebaseio.com",
+            storageBucket: "mvip-mensagens.firebasestorage.app",
+            messagingSenderId: "901144204871",
+            appId: "1:901144204871:web:d26a891e522238a5b3c362",
+            measurementId: "G-3N2KMXRW56"
         };
         
-        let app, db, auth;
+        let app, db;
         let messages = [];
         let currentOpenMessageId = null;
 
-        // Init App
         try {
             app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            authenticateAndLoad();
+            db = getDatabase(app);
+            setupRealtimeListener();
         } catch (error) {
             console.error("Firebase init failed:", error);
             document.getElementById('loadingState').innerHTML = `<p class="text-app-red">Erro ao conectar banco de dados.</p>`;
         }
 
-        async function authenticateAndLoad() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined') {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                if(auth.currentUser) setupRealtimeListener();
-            } catch (err) {
-                console.error("Auth error:", err);
-            }
-        }
-
         function setupRealtimeListener() {
-            // Strict Path compliance (Rule 1) - Public Data for sharing
-            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
-            
-            onSnapshot(collectionRef, (snapshot) => {
+            const dbRef = ref(db, 'messages');
+            onValue(dbRef, (snapshot) => {
                 messages = [];
-                snapshot.forEach(doc => {
-                    messages.push({ id: doc.id, ...doc.data() });
+                snapshot.forEach((childSnapshot) => {
+                    messages.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 
-                // Sort locally by date (Rule 2: No complex queries)
                 messages.sort((a, b) => b.createdAt - a.createdAt);
-                
                 document.getElementById('loadingState').classList.add('hidden');
                 renderDashboard();
                 
-                // If a message is open, update its content in real-time
                 if(currentOpenMessageId) {
                     const updatedMsg = messages.find(m => m.id === currentOpenMessageId);
                     if(updatedMsg) {
                         document.getElementById('detailTitle').textContent = updatedMsg.title;
                         document.getElementById('detailContent').textContent = updatedMsg.content;
                     } else {
-                        // Message was deleted while viewing
                         window.showView('dashboard');
                     }
                 }
@@ -255,11 +222,9 @@
             });
         }
 
-        // Expose functions to Window for inline HTML onclick handlers
         window.renderDashboard = () => {
             const grid = document.getElementById('categoriesGrid');
             const empty = document.getElementById('emptyState');
-            
             grid.innerHTML = '';
             
             if (messages.length === 0) {
@@ -276,7 +241,6 @@
                 card.className = 'message-card group bg-app-card border border-app-border rounded p-6 hover:border-app-red/50 transition-colors cursor-pointer flex flex-col justify-between h-40';
                 card.onclick = () => window.openDetail(msg.id);
                 
-                // Clean snippet extraction
                 let snippet = msg.content.substring(0, 60);
                 if(msg.content.length > 60) snippet += '...';
 
@@ -291,22 +255,16 @@
                 `;
                 grid.appendChild(card);
             });
-            window.filterMessages(); // re-apply search filter if active
+            window.filterMessages();
         };
 
         window.filterMessages = () => {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const cards = document.querySelectorAll('.message-card');
-            
             cards.forEach(card => {
                 const title = card.querySelector('h3').textContent.toLowerCase();
                 const content = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(query) || content.includes(query)) {
-                    card.style.display = 'flex';
-                } else {
-                    card.style.display = 'none';
-                }
+                card.style.display = (title.includes(query) || content.includes(query)) ? 'flex' : 'none';
             });
         };
 
@@ -324,7 +282,6 @@
         window.openDetail = (id) => {
             const msg = messages.find(m => m.id === id);
             if(!msg) return;
-            
             currentOpenMessageId = id;
             document.getElementById('detailTitle').textContent = msg.title;
             document.getElementById('detailContent').textContent = msg.content;
@@ -357,14 +314,10 @@
             const content = document.getElementById('modalContent');
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('opacity-0', 'pointer-events-none');
-            }, 200);
+            setTimeout(() => { modal.classList.add('opacity-0', 'pointer-events-none'); }, 200);
         };
 
         window.saveMessage = async () => {
-            if (!auth.currentUser) return window.showToast('Usuário não autenticado', true);
-            
             const title = document.getElementById('inputTitle').value.trim();
             const content = document.getElementById('inputContent').value.trim();
             const id = document.getElementById('editId').value;
@@ -376,12 +329,12 @@
             btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Salvando...`;
 
             try {
-                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
                 if (id) {
-                    await updateDoc(doc(collectionRef, id), { title, content });
+                    await update(ref(db, 'messages/' + id), { title, content });
                     window.showToast('Mensagem atualizada!');
                 } else {
-                    await addDoc(collectionRef, { title, content, createdAt: Date.now() });
+                    const newMsgRef = push(ref(db, 'messages'));
+                    await set(newMsgRef, { title, content, createdAt: Date.now() });
                     window.showToast('Mensagem criada!');
                 }
                 window.closeModal();
@@ -400,20 +353,9 @@
         };
 
         window.deleteCurrentMessage = async () => {
-            if(!auth.currentUser || !currentOpenMessageId) return;
-            
-            // Custom confirmation without alert()
-            const c = window.confirm("Tem certeza que deseja apagar esta mensagem?"); // Using standard confirm is forbidden by instructions, let's create custom or just delete for MVP.
-            // Wait, rules say "Never use alert() or confirm() under any circumstances." 
-            // So we delete directly and show a toast, or create a custom modal. We'll just delete and show toast to keep UX fast.
-        };
-
-        // Custom Delete Implementation without confirm() to respect guidelines
-        window.deleteCurrentMessage = async () => {
-            if(!auth.currentUser || !currentOpenMessageId) return;
+            if(!currentOpenMessageId) return;
             try {
-                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
-                await deleteDoc(doc(collectionRef, currentOpenMessageId));
+                await remove(ref(db, 'messages/' + currentOpenMessageId));
                 window.showToast('Mensagem excluída.');
                 window.showView('dashboard');
             } catch (err) {
@@ -426,7 +368,6 @@
             navigator.clipboard.writeText(textToCopy).then(() => {
                 window.showToast('Mensagem copiada para a área de transferência!');
             }).catch(() => {
-                // Fallback
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
                 document.body.appendChild(textArea);
@@ -459,10 +400,7 @@
             }
             
             toast.classList.remove('translate-y-20', 'opacity-0');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
         };
     </script>
 </body>
