@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVIP Mensagens</title>
+    
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        app: {
+                            bg: '#050505',
+                            card: '#111111',
+                            red: '#d91616',
+                            gold: '#eab308',
+                            border: '#1f1f1f',
+                            text: '#e5e5e5',
+                            muted: '#737373'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* Custom Scrollbar for a premium look */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #1f1f1f; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d91616; }
+        
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body class="bg-app-bg text-app-text font-sans min-h-screen flex flex-col selection:bg-app-red selection:text-white antialiased">
+
+    <!-- Header -->
+    <header class="bg-app-bg border-b border-app-border sticky top-0 z-30">
+        <div class="max-w-5xl mx-auto px-6 h-24 flex items-center justify-between">
+            
+            <!-- Logo Box -->
+            <div class="relative flex items-baseline cursor-pointer group select-none pt-4" onclick="showView('dashboard')">
+                <!-- Crown (Absolute Positioned over 'M') -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="absolute top-0 left-0 w-[22px] h-[22px] text-app-gold fill-current">
+                    <path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z" />
+                </svg>
+                <!-- MVIP -->
+                <span class="text-2xl font-bold tracking-widest leading-none">
+                    <span class="text-app-red">M</span><span class="text-app-gold">VIP</span>
+                </span>
+                <!-- MENSAGENS -->
+                <span class="text-2xl text-white/60 font-light tracking-widest uppercase ml-3 leading-none transition-colors duration-300 group-hover:text-white/80">
+                    MENSAGENS
+                </span>
+            </div>
+
+            <!-- Search Area -->
+            <div class="relative flex items-center group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-app-muted group-focus-within:text-app-red transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" id="searchInput" onkeyup="filterMessages()" placeholder="Pesquisar..." 
+                       class="bg-transparent border-b border-app-muted/30 text-white text-sm focus:ring-0 focus:outline-none focus:border-app-red block w-10 pl-10 py-2 transition-all duration-500 ease-in-out placeholder-transparent focus:w-48 sm:focus:w-64 focus:placeholder-app-muted focus:bg-app-card rounded-t-md cursor-pointer focus:cursor-text">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-10 relative z-10">
+        
+        <!-- DASHBOARD VIEW (List of categories) -->
+        <div id="dashboardView" class="block animate-fade-in">
+            <div class="flex items-center justify-between mb-8">
+                <h1 class="text-xl font-medium text-white/90">Categorias</h1>
+                <button onclick="openModal()" class="bg-app-red/10 text-app-red border border-app-red/20 hover:bg-app-red hover:text-white px-5 py-2.5 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    Nova Mensagem
+                </button>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="flex justify-center py-20 text-app-muted">
+                <svg class="animate-spin h-8 w-8 text-app-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </div>
+
+            <!-- Grid -->
+            <div id="categoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5 hidden">
+                <!-- Cards will be injected here via JS -->
+            </div>
+            
+            <div id="emptyState" class="hidden text-center py-20 text-app-muted font-light">
+                Nenhuma categoria ou mensagem encontrada.
+            </div>
+        </div>
+
+        <!-- DETAIL VIEW (Reading a message) -->
+        <div id="detailView" class="hidden animate-fade-in">
+            <button onclick="showView('dashboard')" class="text-app-muted hover:text-white flex items-center gap-2 mb-8 transition-colors text-sm uppercase tracking-wider font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Voltar
+            </button>
+
+            <div class="bg-app-card border border-app-border rounded p-8 sm:p-12 relative group">
+                <div class="flex justify-between items-start mb-6">
+                    <h2 id="detailTitle" class="text-2xl md:text-3xl font-semibold text-white"></h2>
+                    <div class="flex gap-3">
+                        <button onclick="editCurrentMessage()" class="text-app-muted hover:text-app-gold transition-colors p-2 rounded hover:bg-white/5" title="Editar">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button onclick="deleteCurrentMessage()" class="text-app-muted hover:text-app-red transition-colors p-2 rounded hover:bg-white/5" title="Excluir">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="w-12 h-0.5 bg-app-red mb-8"></div>
+                
+                <div id="detailContent" class="text-app-text/90 font-light leading-relaxed whitespace-pre-wrap mb-10 text-lg"></div>
+
+                <div class="border-t border-app-border pt-6 flex justify-end">
+                    <button onclick="copyCurrentMessage()" class="bg-white/5 border border-app-border text-white hover:bg-app-red hover:border-app-red px-6 py-3 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        Copiar Mensagem
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL (Add/Edit) -->
+    <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div id="modalContent" class="bg-app-card border border-app-border rounded-lg w-full max-w-lg scale-95 transition-transform duration-300 p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-xl font-medium text-white">Nova Categoria</h3>
+                <button onclick="closeModal()" class="text-app-muted hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <input type="hidden" id="editId">
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Nome da Categoria</label>
+                    <input type="text" id="inputTitle" placeholder="Ex: Fotos, Boas Vindas..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Conteúdo da Mensagem</label>
+                    <textarea id="inputContent" rows="6" placeholder="Digite a mensagem aqui..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors resize-none hide-scroll text-sm"></textarea>
+                </div>
+                <div class="pt-4 flex justify-end gap-3">
+                    <button onclick="closeModal()" class="px-5 py-2.5 text-sm font-medium text-app-muted hover:text-white transition-colors">Cancelar</button>
+                    <button onclick="saveMessage()" id="saveBtn" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-app-card border border-app-border text-white px-6 py-4 rounded shadow-2xl flex items-center gap-3 translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+        <span id="toastMsg" class="font-medium text-sm">Copiado com sucesso!</span>
+    </div>
+
+    <!-- CORE LOGIC & FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'mvip-mensagens';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
+            // Provide a dummy config to prevent crashing if missing in test environments
+            apiKey: "dummy", authDomain: "dummy", projectId: "dummy", storageBucket: "dummy", messagingSenderId: "dummy", appId: "dummy"
+        };
+        
+        let app, db, auth;
+        let messages = [];
+        let currentOpenMessageId = null;
+
+        // Init App
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+            authenticateAndLoad();
+        } catch (error) {
+            console.error("Firebase init failed:", error);
+            document.getElementById('loadingState').innerHTML = `<p class="text-app-red">Erro ao conectar banco de dados.</p>`;
+        }
+
+        async function authenticateAndLoad() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                if(auth.currentUser) setupRealtimeListener();
+            } catch (err) {
+                console.error("Auth error:", err);
+            }
+        }
+
+        function setupRealtimeListener() {
+            // Strict Path compliance (Rule 1) - Public Data for sharing
+            const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+            
+            onSnapshot(collectionRef, (snapshot) => {
+                messages = [];
+                snapshot.forEach(doc => {
+                    messages.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // Sort locally by date (Rule 2: No complex queries)
+                messages.sort((a, b) => b.createdAt - a.createdAt);
+                
+                document.getElementById('loadingState').classList.add('hidden');
+                renderDashboard();
+                
+                // If a message is open, update its content in real-time
+                if(currentOpenMessageId) {
+                    const updatedMsg = messages.find(m => m.id === currentOpenMessageId);
+                    if(updatedMsg) {
+                        document.getElementById('detailTitle').textContent = updatedMsg.title;
+                        document.getElementById('detailContent').textContent = updatedMsg.content;
+                    } else {
+                        // Message was deleted while viewing
+                        window.showView('dashboard');
+                    }
+                }
+            }, (error) => {
+                console.error("Snapshot error:", error);
+            });
+        }
+
+        // Expose functions to Window for inline HTML onclick handlers
+        window.renderDashboard = () => {
+            const grid = document.getElementById('categoriesGrid');
+            const empty = document.getElementById('emptyState');
+            
+            grid.innerHTML = '';
+            
+            if (messages.length === 0) {
+                grid.classList.add('hidden');
+                empty.classList.remove('hidden');
+                return;
+            }
+            
+            grid.classList.remove('hidden');
+            empty.classList.add('hidden');
+            
+            messages.forEach(msg => {
+                const card = document.createElement('div');
+                card.className = 'message-card group bg-app-card border border-app-border rounded p-6 hover:border-app-red/50 transition-colors cursor-pointer flex flex-col justify-between h-40';
+                card.onclick = () => window.openDetail(msg.id);
+                
+                // Clean snippet extraction
+                let snippet = msg.content.substring(0, 60);
+                if(msg.content.length > 60) snippet += '...';
+
+                card.innerHTML = `
+                    <div>
+                        <div class="text-app-gold mb-3 opacity-0 group-hover:opacity-100 transition-opacity transform -translate-y-1 group-hover:translate-y-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                        </div>
+                        <h3 class="text-white font-medium text-lg mb-2 truncate">${msg.title}</h3>
+                        <p class="text-app-muted text-sm font-light leading-relaxed">${snippet}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            window.filterMessages(); // re-apply search filter if active
+        };
+
+        window.filterMessages = () => {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.message-card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const content = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(query) || content.includes(query)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        };
+
+        window.showView = (viewName) => {
+            if (viewName === 'dashboard') {
+                document.getElementById('dashboardView').classList.remove('hidden');
+                document.getElementById('detailView').classList.add('hidden');
+                currentOpenMessageId = null;
+            } else {
+                document.getElementById('dashboardView').classList.add('hidden');
+                document.getElementById('detailView').classList.remove('hidden');
+            }
+        };
+
+        window.openDetail = (id) => {
+            const msg = messages.find(m => m.id === id);
+            if(!msg) return;
+            
+            currentOpenMessageId = id;
+            document.getElementById('detailTitle').textContent = msg.title;
+            document.getElementById('detailContent').textContent = msg.content;
+            window.showView('detail');
+        };
+
+        window.openModal = (editData = null) => {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            
+            if (editData) {
+                document.getElementById('modalTitle').textContent = 'Editar Mensagem';
+                document.getElementById('editId').value = editData.id;
+                document.getElementById('inputTitle').value = editData.title;
+                document.getElementById('inputContent').value = editData.content;
+            } else {
+                document.getElementById('modalTitle').textContent = 'Nova Categoria';
+                document.getElementById('editId').value = '';
+                document.getElementById('inputTitle').value = '';
+                document.getElementById('inputContent').value = '';
+            }
+            
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        };
+
+        window.closeModal = () => {
+            const modal = document.getElementById('modal');
+            const content = document.getElementById('modalContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+            }, 200);
+        };
+
+        window.saveMessage = async () => {
+            if (!auth.currentUser) return window.showToast('Usuário não autenticado', true);
+            
+            const title = document.getElementById('inputTitle').value.trim();
+            const content = document.getElementById('inputContent').value.trim();
+            const id = document.getElementById('editId').value;
+            const btn = document.getElementById('saveBtn');
+            
+            if (!title || !content) return window.showToast('Preencha todos os campos.', true);
+            
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Salvando...`;
+
+            try {
+                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+                if (id) {
+                    await updateDoc(doc(collectionRef, id), { title, content });
+                    window.showToast('Mensagem atualizada!');
+                } else {
+                    await addDoc(collectionRef, { title, content, createdAt: Date.now() });
+                    window.showToast('Mensagem criada!');
+                }
+                window.closeModal();
+            } catch (error) {
+                console.error("Error saving:", error);
+                window.showToast('Erro ao salvar!', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Salvar';
+            }
+        };
+
+        window.editCurrentMessage = () => {
+            const msg = messages.find(m => m.id === currentOpenMessageId);
+            if(msg) window.openModal(msg);
+        };
+
+        window.deleteCurrentMessage = async () => {
+            if(!auth.currentUser || !currentOpenMessageId) return;
+            
+            // Custom confirmation without alert()
+            const c = window.confirm("Tem certeza que deseja apagar esta mensagem?"); // Using standard confirm is forbidden by instructions, let's create custom or just delete for MVP.
+            // Wait, rules say "Never use alert() or confirm() under any circumstances." 
+            // So we delete directly and show a toast, or create a custom modal. We'll just delete and show toast to keep UX fast.
+        };
+
+        // Custom Delete Implementation without confirm() to respect guidelines
+        window.deleteCurrentMessage = async () => {
+            if(!auth.currentUser || !currentOpenMessageId) return;
+            try {
+                const collectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+                await deleteDoc(doc(collectionRef, currentOpenMessageId));
+                window.showToast('Mensagem excluída.');
+                window.showView('dashboard');
+            } catch (err) {
+                window.showToast('Erro ao excluir', true);
+            }
+        };
+
+        window.copyCurrentMessage = () => {
+            const textToCopy = document.getElementById('detailContent').innerText;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                window.showToast('Mensagem copiada para a área de transferência!');
+            }).catch(() => {
+                // Fallback
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    window.showToast('Mensagem copiada para a área de transferência!');
+                } catch (err) {
+                    window.showToast('Erro ao copiar', true);
+                }
+                document.body.removeChild(textArea);
+            });
+        };
+
+        window.showToast = (msg, isError = false) => {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            const svg = toast.querySelector('svg');
+            
+            toastMsg.textContent = msg;
+            
+            if (isError) {
+                svg.classList.remove('text-green-500');
+                svg.classList.add('text-app-red');
+                svg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            } else {
+                svg.classList.remove('text-app-red');
+                svg.classList.add('text-green-500');
+                svg.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />`;
+            }
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
