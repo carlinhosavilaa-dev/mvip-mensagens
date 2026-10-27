@@ -37,6 +37,9 @@
         ::-webkit-scrollbar-thumb:hover { background: #d91616; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
+        
+        /* Estilo para o select ficar com o fundo correto nas opções */
+        select option { background-color: #050505; color: #e5e5e5; }
     </style>
 </head>
 <body class="bg-app-bg text-app-text font-sans min-h-screen flex flex-col selection:bg-app-red selection:text-white antialiased">
@@ -80,7 +83,7 @@
                 </button>
             </div>
 
-            <!-- Botões de Filtro Automáticos -->
+            <!-- Botões de Filtro -->
             <div id="topicFilters" class="flex gap-3 overflow-x-auto pb-6 mb-2 hide-scroll"></div>
 
             <div id="loadingState" class="flex justify-center py-20 text-app-muted">
@@ -137,9 +140,19 @@
             </div>
             <input type="hidden" id="editId">
             <div class="space-y-4">
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Título da Mensagem</label>
-                    <input type="text" id="inputTitle" placeholder="Ex: Fotos Bonitas" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-[10px] uppercase tracking-wider text-app-muted mb-2">Filtro / Tópico</label>
+                        <!-- Substituído para Select -->
+                        <select id="inputTopic" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm cursor-pointer">
+                            <option value="">✨ Automático (Pelo título)</option>
+                            <!-- Tópicos serão inseridos aqui pelo JS -->
+                        </select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-[10px] uppercase tracking-wider text-app-muted mb-2">Título da Mensagem</label>
+                        <input type="text" id="inputTitle" placeholder="Ex: Fotos Bonitas" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Conteúdo</label>
@@ -180,33 +193,52 @@
         let currentOpenMessageId = null;
         let activeTopicFilter = 'all';
 
-        // NOVA LÓGICA: Dicionário Inteligente e Filtro de Palavras Inúteis
+        // Lógica de Automação
         const getAutoTopic = (title) => {
             if (!title) return '';
             const t = title.toLowerCase();
             
-            // 1. Dicionário de Mapeamento (procura pela palavra em qualquer lugar do título)
             if (t.includes('foto')) return 'FOTOS';
             if (t.includes('cadastro') || t.includes('cadastrar')) return 'CADASTROS';
             if (t.includes('perfil')) return 'PERFIL';
             if (t.includes('pagamento') || t.includes('pix') || t.includes('dinheiro') || t.includes('saque')) return 'FINANCEIRO';
             if (t.includes('vídeo') || t.includes('video')) return 'VÍDEOS';
             
-            // 2. Se não encontrou no dicionário, remove as palavras de ligação e pega a mais importante
             const stopWords = ['sem', 'com', 'de', 'do', 'da', 'no', 'na', 'para', 'por', 'um', 'uma', 'os', 'as', 'poucas', 'poucos', 'muitas', 'muitos', 'mais', 'menos', 'o', 'a', 'e', 'ou', 'em', 'que'];
             const words = title.trim().split(/\s+/);
             
             for (let word of words) {
-                // Limpa a palavra de pontuações
                 let cleanWord = word.toLowerCase().replace(/[^a-zãõáéíóúâêîôûç]/g, '');
-                // Se a palavra for maior que 2 letras e não for uma palavra inútil, ela vira o tópico
                 if (cleanWord.length > 2 && !stopWords.includes(cleanWord)) {
                     return cleanWord.toUpperCase();
                 }
             }
-            
-            // 3. Fallback final
             return words[0].toUpperCase();
+        };
+
+        const getDisplayTopic = (msg) => {
+            return msg.topic ? msg.topic.toUpperCase() : getAutoTopic(msg.title);
+        };
+
+        // Atualiza a lista de opções do Select com os tópicos existentes
+        const updateTopicSelectOptions = () => {
+            const select = document.getElementById('inputTopic');
+            const currentSelection = select.value;
+            const topics = [...new Set(messages.map(m => getDisplayTopic(m)).filter(Boolean))].sort();
+            
+            let html = `<option value="">✨ Automático (Pelo título)</option>`;
+            topics.forEach(t => {
+                html += `<option value="${t}">${t}</option>`;
+            });
+            
+            select.innerHTML = html;
+            
+            // Mantém a seleção se ela ainda existir na lista
+            if (topics.includes(currentSelection)) {
+                select.value = currentSelection;
+            } else {
+                select.value = "";
+            }
         };
 
         try {
@@ -229,12 +261,13 @@
                 messages.sort((a, b) => b.createdAt - a.createdAt);
                 document.getElementById('loadingState').classList.add('hidden');
                 
-                const currentTopics = [...new Set(messages.map(m => getAutoTopic(m.title)))];
+                const currentTopics = [...new Set(messages.map(m => getDisplayTopic(m)))];
                 if (activeTopicFilter !== 'all' && !currentTopics.includes(activeTopicFilter)) {
                     activeTopicFilter = 'all';
                 }
                 
                 renderDashboard();
+                updateTopicSelectOptions(); // Atualiza a lista do formulário
                 
                 if(currentOpenMessageId) {
                     const updatedMsg = messages.find(m => m.id === currentOpenMessageId);
@@ -242,9 +275,9 @@
                         document.getElementById('detailTitle').textContent = updatedMsg.title;
                         document.getElementById('detailContent').textContent = updatedMsg.content;
                         
-                        const autoTopic = getAutoTopic(updatedMsg.title);
+                        const displayTopic = getDisplayTopic(updatedMsg);
                         const topicBadge = document.getElementById('detailTopic');
-                        topicBadge.textContent = autoTopic;
+                        topicBadge.textContent = displayTopic;
                         topicBadge.classList.remove('hidden');
                     } else {
                         window.showView('dashboard');
@@ -258,7 +291,7 @@
             const empty = document.getElementById('emptyState');
             const filterContainer = document.getElementById('topicFilters');
             
-            const topics = [...new Set(messages.map(m => getAutoTopic(m.title)).filter(Boolean))].sort();
+            const topics = [...new Set(messages.map(m => getDisplayTopic(m)).filter(Boolean))].sort();
             
             if (topics.length > 0) {
                 let filterHTML = `<button onclick="setTopicFilter('all')" class="px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors border ${activeTopicFilter === 'all' ? 'bg-app-red text-white border-app-red' : 'bg-app-card text-app-muted border-app-border hover:border-app-muted'}">Todos</button>`;
@@ -274,7 +307,7 @@
             grid.innerHTML = '';
             
             const filteredMessages = messages.filter(msg => {
-                if (activeTopicFilter !== 'all' && getAutoTopic(msg.title) !== activeTopicFilter) return false;
+                if (activeTopicFilter !== 'all' && getDisplayTopic(msg) !== activeTopicFilter) return false;
                 return true;
             });
             
@@ -286,10 +319,10 @@
                 empty.classList.add('hidden');
                 
                 filteredMessages.forEach(msg => {
-                    const autoTopic = getAutoTopic(msg.title);
+                    const displayTopic = getDisplayTopic(msg);
                     const card = document.createElement('div');
                     card.className = 'message-card group bg-app-card border border-app-border rounded p-6 hover:border-app-red/50 transition-colors cursor-pointer flex flex-col justify-between h-[11.5rem]';
-                    card.setAttribute('data-topic', autoTopic);
+                    card.setAttribute('data-topic', displayTopic);
                     card.onclick = () => window.openDetail(msg.id);
                     
                     let snippet = msg.content.substring(0, 60);
@@ -297,7 +330,7 @@
                     
                     card.innerHTML = `
                         <div>
-                            <span class="inline-block px-2 py-1 bg-app-border text-app-muted text-[10px] font-semibold rounded-full mb-3 uppercase tracking-wider truncate max-w-full" title="${autoTopic}">${autoTopic}</span>
+                            <span class="inline-block px-2 py-1 bg-app-border text-app-muted text-[10px] font-semibold rounded-full mb-3 uppercase tracking-wider truncate max-w-full" title="${displayTopic}">${displayTopic}</span>
                             <h3 class="text-white font-medium text-lg mb-2 truncate">${msg.title}</h3>
                             <p class="text-app-muted text-sm font-light leading-relaxed">${snippet}</p>
                         </div>
@@ -343,9 +376,9 @@
             document.getElementById('detailTitle').textContent = msg.title;
             document.getElementById('detailContent').textContent = msg.content;
             
-            const autoTopic = getAutoTopic(msg.title);
+            const displayTopic = getDisplayTopic(msg);
             const topicBadge = document.getElementById('detailTopic');
-            topicBadge.textContent = autoTopic;
+            topicBadge.textContent = displayTopic;
             topicBadge.classList.remove('hidden');
             
             window.showView('detail');
@@ -354,15 +387,18 @@
         window.openModal = (editData = null) => {
             const modal = document.getElementById('modal');
             const content = document.getElementById('modalContent');
+            updateTopicSelectOptions(); // Garante que a lista está atualizada ao abrir
             
             if (editData) {
                 document.getElementById('modalTitle').textContent = 'Editar Mensagem';
                 document.getElementById('editId').value = editData.id;
+                document.getElementById('inputTopic').value = editData.topic || '';
                 document.getElementById('inputTitle').value = editData.title;
                 document.getElementById('inputContent').value = editData.content;
             } else {
                 document.getElementById('modalTitle').textContent = 'Nova Categoria';
                 document.getElementById('editId').value = '';
+                document.getElementById('inputTopic').value = '';
                 document.getElementById('inputTitle').value = '';
                 document.getElementById('inputContent').value = '';
             }
@@ -381,6 +417,7 @@
         };
 
         window.saveMessage = async () => {
+            const topicSelect = document.getElementById('inputTopic').value;
             const title = document.getElementById('inputTitle').value.trim();
             const content = document.getElementById('inputContent').value.trim();
             const id = document.getElementById('editId').value;
@@ -388,16 +425,19 @@
             
             if (!title || !content) return window.showToast('Preencha Título e Conteúdo.', true);
             
+            // Se "Automático" estiver selecionado (value=""), usa o gerador automático
+            const finalTopic = topicSelect !== '' ? topicSelect : getAutoTopic(title);
+            
             btn.disabled = true;
             btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg> Salvando...`;
 
             try {
                 if (id) {
-                    await update(ref(db, 'messages/' + id), { title, content });
+                    await update(ref(db, 'messages/' + id), { topic: finalTopic, title, content });
                     window.showToast('Mensagem atualizada!');
                 } else {
                     const newMsgRef = push(ref(db, 'messages'));
-                    await set(newMsgRef, { title, content, createdAt: Date.now() });
+                    await set(newMsgRef, { topic: finalTopic, title, content, createdAt: Date.now() });
                     window.showToast('Mensagem criada!');
                 }
                 window.closeModal();
