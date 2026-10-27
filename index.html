@@ -38,7 +38,6 @@
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         
-        /* Estilo para o select ficar com o fundo correto nas opções */
         select option { background-color: #050505; color: #e5e5e5; }
     </style>
 </head>
@@ -77,10 +76,19 @@
         <div id="dashboardView" class="block animate-fade-in">
             <div class="flex items-center justify-between mb-6">
                 <h1 class="text-xl font-medium text-white/90">Categorias</h1>
-                <button onclick="openModal()" class="bg-app-red/10 text-app-red border border-app-red/20 hover:bg-app-red hover:text-white px-5 py-2.5 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                    Nova Mensagem
-                </button>
+                
+                <div class="flex items-center gap-3">
+                    <!-- Novo Botão: Renomear Tópico (Oculto por padrão) -->
+                    <button id="btnRenameTopic" onclick="openRenameModal()" class="hidden bg-app-card border border-app-border text-app-muted hover:text-white hover:border-app-muted px-4 py-2.5 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        Renomear Tópico
+                    </button>
+                    
+                    <button onclick="openModal()" class="bg-app-red/10 text-app-red border border-app-red/20 hover:bg-app-red hover:text-white px-5 py-2.5 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                        Nova Mensagem
+                    </button>
+                </div>
             </div>
 
             <!-- Botões de Filtro -->
@@ -129,7 +137,7 @@
         </div>
     </main>
 
-    <!-- MODAL -->
+    <!-- MODAL NOVA/EDITAR MENSAGEM -->
     <div id="modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
         <div id="modalContent" class="bg-app-card border border-app-border rounded-lg w-full max-w-lg scale-95 transition-transform duration-300 p-8 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -142,17 +150,12 @@
             
             <div class="space-y-4">
                 <div class="flex flex-col sm:flex-row gap-4">
-                    
-                    <!-- Campo Tópico: Menu de Seleção -->
                     <div class="flex-1" id="boxSelectTopic">
                         <label class="block text-[10px] uppercase tracking-wider text-app-muted mb-2">Filtro / Tópico</label>
                         <select id="selectTopic" onchange="handleTopicChange()" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm cursor-pointer">
                             <option value="">Automático</option>
-                            <!-- Tópicos serão inseridos aqui pelo JS -->
                         </select>
                     </div>
-
-                    <!-- Campo Tópico: Digitar Novo (Oculto por padrão) -->
                     <div class="flex-1 hidden" id="boxInputTopic">
                         <label class="block text-[10px] uppercase tracking-wider text-app-muted mb-2">Novo Tópico</label>
                         <div class="relative">
@@ -162,7 +165,6 @@
                             </button>
                         </div>
                     </div>
-
                     <div class="flex-1">
                         <label class="block text-[10px] uppercase tracking-wider text-app-muted mb-2">Título da Mensagem</label>
                         <input type="text" id="inputTitle" placeholder="Ex: Fotos Bonitas" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
@@ -177,6 +179,26 @@
                     <button onclick="closeModal()" class="px-5 py-2.5 text-sm font-medium text-app-muted hover:text-white transition-colors">Cancelar</button>
                     <button onclick="saveMessage()" id="saveBtn" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">Salvar</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO MODAL: RENOMEAR TÓPICO EM MASSA -->
+    <div id="modalRename" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300 px-4">
+        <div id="modalRenameContent" class="bg-app-card border border-app-border rounded-lg w-full max-w-sm scale-95 transition-transform duration-300 p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-medium text-white">Renomear Tópico</h3>
+                <button onclick="closeRenameModal()" class="text-app-muted hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <p class="text-app-muted text-xs mb-4">Isto atualizará todas as mensagens que pertencem a este grupo.</p>
+            <input type="text" id="inputRenameTopic" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm mb-6" placeholder="Novo nome do tópico">
+            
+            <div class="flex justify-end gap-3">
+                <button onclick="closeRenameModal()" class="px-5 py-2.5 text-sm font-medium text-app-muted hover:text-white transition-colors">Cancelar</button>
+                <button onclick="confirmRenameTopic()" id="btnConfirmRename" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">Salvar</button>
             </div>
         </div>
     </div>
@@ -208,7 +230,6 @@
         let currentOpenMessageId = null;
         let activeTopicFilter = 'all';
 
-        // Lógica de Automação
         const getAutoTopic = (title) => {
             if (!title) return '';
             const t = title.toLowerCase();
@@ -235,7 +256,6 @@
             return msg.topic ? msg.topic.toUpperCase() : getAutoTopic(msg.title);
         };
 
-        // Troca do Select para Input
         window.handleTopicChange = () => {
             const select = document.getElementById('selectTopic');
             if (select.value === 'NEW_CUSTOM_TOPIC') {
@@ -245,7 +265,6 @@
             }
         };
 
-        // Volta do Input para o Select
         window.cancelCustomTopic = () => {
             document.getElementById('inputCustomTopic').value = '';
             document.getElementById('boxInputTopic').classList.add('hidden');
@@ -322,6 +341,14 @@
             const grid = document.getElementById('categoriesGrid');
             const empty = document.getElementById('emptyState');
             const filterContainer = document.getElementById('topicFilters');
+            const btnRename = document.getElementById('btnRenameTopic');
+            
+            // Lógica para mostrar/esconder o botão de Renomear
+            if (activeTopicFilter === 'all') {
+                btnRename.classList.add('hidden');
+            } else {
+                btnRename.classList.remove('hidden');
+            }
             
             const topics = [...new Set(messages.map(m => getDisplayTopic(m)).filter(Boolean))].sort();
             
@@ -421,7 +448,6 @@
             const content = document.getElementById('modalContent');
             updateTopicSelectOptions();
             
-            // Reseta a visualização para o modo menu dropdown
             document.getElementById('boxInputTopic').classList.add('hidden');
             document.getElementById('boxSelectTopic').classList.remove('hidden');
             document.getElementById('inputCustomTopic').value = '';
@@ -434,8 +460,6 @@
                 
                 if (editData.topic) {
                     document.getElementById('selectTopic').value = editData.topic;
-                    
-                    // Se o tópico não estiver na lista padrão, abre a caixa de digitar
                     if (document.getElementById('selectTopic').value !== editData.topic) {
                         document.getElementById('boxSelectTopic').classList.add('hidden');
                         document.getElementById('boxInputTopic').classList.remove('hidden');
@@ -467,8 +491,6 @@
 
         window.saveMessage = async () => {
             let topicValue = '';
-            
-            // Verifica qual campo de tópico está visível (Menu ou Texto)
             if (!document.getElementById('boxInputTopic').classList.contains('hidden')) {
                 topicValue = document.getElementById('inputCustomTopic').value.trim().toUpperCase();
             } else {
@@ -519,6 +541,59 @@
                 window.showView('dashboard');
             } catch (err) {
                 window.showToast('Erro ao excluir', true);
+            }
+        };
+
+        // LÓGICA DO NOVO MODAL DE RENOMEAR TÓPICO
+        window.openRenameModal = () => {
+            if (activeTopicFilter === 'all') return;
+            document.getElementById('inputRenameTopic').value = activeTopicFilter;
+            
+            const modal = document.getElementById('modalRename');
+            const content = document.getElementById('modalRenameContent');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            content.classList.remove('scale-95');
+            content.classList.add('scale-100');
+        };
+
+        window.closeRenameModal = () => {
+            const modal = document.getElementById('modalRename');
+            const content = document.getElementById('modalRenameContent');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('opacity-0', 'pointer-events-none'); }, 200);
+        };
+
+        window.confirmRenameTopic = async () => {
+            const newName = document.getElementById('inputRenameTopic').value.trim().toUpperCase();
+            if (!newName || newName === activeTopicFilter) {
+                closeRenameModal();
+                return;
+            }
+
+            const btn = document.getElementById('btnConfirmRename');
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg> Salvando...`;
+
+            // Procura no banco de dados todas as mensagens que pertencem a este filtro ativo
+            const messagesToUpdate = messages.filter(m => getDisplayTopic(m) === activeTopicFilter);
+            const updates = {};
+            
+            messagesToUpdate.forEach(msg => {
+                updates['messages/' + msg.id + '/topic'] = newName;
+            });
+
+            try {
+                await update(ref(db), updates);
+                window.showToast(`Tópico atualizado!`);
+                activeTopicFilter = newName; // Mantém a aba aberta no novo nome
+                closeRenameModal();
+            } catch (err) {
+                console.error("Erro ao renomear:", err);
+                window.showToast('Erro ao renomear tópico!', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Salvar';
             }
         };
 
