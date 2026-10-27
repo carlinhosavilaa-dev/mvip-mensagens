@@ -180,10 +180,33 @@
         let currentOpenMessageId = null;
         let activeTopicFilter = 'all';
 
-        // Lógica automática de extração do tópico (Primeira palavra do título)
+        // NOVA LÓGICA: Dicionário Inteligente e Filtro de Palavras Inúteis
         const getAutoTopic = (title) => {
             if (!title) return '';
-            return title.trim().split(/\s+/)[0].toUpperCase();
+            const t = title.toLowerCase();
+            
+            // 1. Dicionário de Mapeamento (procura pela palavra em qualquer lugar do título)
+            if (t.includes('foto')) return 'FOTOS';
+            if (t.includes('cadastro') || t.includes('cadastrar')) return 'CADASTROS';
+            if (t.includes('perfil')) return 'PERFIL';
+            if (t.includes('pagamento') || t.includes('pix') || t.includes('dinheiro') || t.includes('saque')) return 'FINANCEIRO';
+            if (t.includes('vídeo') || t.includes('video')) return 'VÍDEOS';
+            
+            // 2. Se não encontrou no dicionário, remove as palavras de ligação e pega a mais importante
+            const stopWords = ['sem', 'com', 'de', 'do', 'da', 'no', 'na', 'para', 'por', 'um', 'uma', 'os', 'as', 'poucas', 'poucos', 'muitas', 'muitos', 'mais', 'menos', 'o', 'a', 'e', 'ou', 'em', 'que'];
+            const words = title.trim().split(/\s+/);
+            
+            for (let word of words) {
+                // Limpa a palavra de pontuações
+                let cleanWord = word.toLowerCase().replace(/[^a-zãõáéíóúâêîôûç]/g, '');
+                // Se a palavra for maior que 2 letras e não for uma palavra inútil, ela vira o tópico
+                if (cleanWord.length > 2 && !stopWords.includes(cleanWord)) {
+                    return cleanWord.toUpperCase();
+                }
+            }
+            
+            // 3. Fallback final
+            return words[0].toUpperCase();
         };
 
         try {
@@ -206,7 +229,6 @@
                 messages.sort((a, b) => b.createdAt - a.createdAt);
                 document.getElementById('loadingState').classList.add('hidden');
                 
-                // Se o tópico ativo não existir mais, volta para "todos"
                 const currentTopics = [...new Set(messages.map(m => getAutoTopic(m.title)))];
                 if (activeTopicFilter !== 'all' && !currentTopics.includes(activeTopicFilter)) {
                     activeTopicFilter = 'all';
@@ -236,7 +258,6 @@
             const empty = document.getElementById('emptyState');
             const filterContainer = document.getElementById('topicFilters');
             
-            // Gerar Filtros Automáticos baseados na primeira palavra
             const topics = [...new Set(messages.map(m => getAutoTopic(m.title)).filter(Boolean))].sort();
             
             if (topics.length > 0) {
@@ -276,7 +297,7 @@
                     
                     card.innerHTML = `
                         <div>
-                            <span class="inline-block px-2 py-1 bg-app-border text-app-muted text-[10px] font-semibold rounded-full mb-3 uppercase tracking-wider">${autoTopic}</span>
+                            <span class="inline-block px-2 py-1 bg-app-border text-app-muted text-[10px] font-semibold rounded-full mb-3 uppercase tracking-wider truncate max-w-full" title="${autoTopic}">${autoTopic}</span>
                             <h3 class="text-white font-medium text-lg mb-2 truncate">${msg.title}</h3>
                             <p class="text-app-muted text-sm font-light leading-relaxed">${snippet}</p>
                         </div>
@@ -368,7 +389,7 @@
             if (!title || !content) return window.showToast('Preencha Título e Conteúdo.', true);
             
             btn.disabled = true;
-            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Salvando...`;
+            btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle></svg> Salvando...`;
 
             try {
                 if (id) {
