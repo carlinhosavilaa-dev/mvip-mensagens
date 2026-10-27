@@ -83,12 +83,17 @@
     <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-10 relative z-10">
         <!-- DASHBOARD VIEW -->
         <div id="dashboardView" class="block animate-fade-in">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-6">
                 <h1 class="text-xl font-medium text-white/90">Categorias</h1>
                 <button onclick="openModal()" class="bg-app-red/10 text-app-red border border-app-red/20 hover:bg-app-red hover:text-white px-5 py-2.5 rounded text-sm font-medium transition-all duration-300 flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                     Nova Mensagem
                 </button>
+            </div>
+
+            <!-- Botões de Filtro por Tópico -->
+            <div id="topicFilters" class="flex gap-3 overflow-x-auto pb-6 mb-2 hide-scroll">
+                <!-- Injetados por JS -->
             </div>
 
             <!-- Loading State -->
@@ -109,7 +114,10 @@
 
             <div class="bg-app-card border border-app-border rounded p-8 sm:p-12 relative group">
                 <div class="flex justify-between items-start mb-6">
-                    <h2 id="detailTitle" class="text-2xl md:text-3xl font-semibold text-white"></h2>
+                    <div>
+                        <span id="detailTopic" class="inline-block px-3 py-1 bg-app-border text-app-muted text-xs font-semibold rounded-full mb-3 uppercase tracking-wider hidden"></span>
+                        <h2 id="detailTitle" class="text-2xl md:text-3xl font-semibold text-white"></h2>
+                    </div>
                     <div class="flex gap-3">
                         <button onclick="editCurrentMessage()" class="text-app-muted hover:text-app-gold transition-colors p-2 rounded hover:bg-white/5" title="Editar">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
@@ -143,16 +151,22 @@
                 </button>
             </div>
             <input type="hidden" id="editId">
-            <div class="space-y-5">
-                <div>
-                    <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Nome da Categoria</label>
-                    <input type="text" id="inputTitle" placeholder="Ex: Boas Vindas..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+            <div class="space-y-4">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Tópico</label>
+                        <input type="text" id="inputTopic" placeholder="Ex: Fotos" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Título</label>
+                        <input type="text" id="inputTitle" placeholder="Ex: Fotos Bonitas" class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors text-sm">
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-app-muted mb-2">Conteúdo da Mensagem</label>
                     <textarea id="inputContent" rows="6" placeholder="Digite a mensagem aqui..." class="w-full bg-app-bg border border-app-border rounded px-4 py-3 text-white focus:outline-none focus:border-app-red transition-colors resize-none hide-scroll text-sm"></textarea>
                 </div>
-                <div class="pt-4 flex justify-end gap-3">
+                <div class="pt-2 flex justify-end gap-3">
                     <button onclick="closeModal()" class="px-5 py-2.5 text-sm font-medium text-app-muted hover:text-white transition-colors">Cancelar</button>
                     <button onclick="saveMessage()" id="saveBtn" class="bg-app-red text-white px-6 py-2.5 rounded text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">Salvar</button>
                 </div>
@@ -171,7 +185,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getDatabase, ref, onValue, push, set, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Configuração exata do seu projeto
         const firebaseConfig = {
             apiKey: "AIzaSyCg2qDh3CfJPAbYxFmUz1P3xumUSivAD6I",
             authDomain: "mvip-mensagens.firebaseapp.com",
@@ -186,6 +199,7 @@
         let app, db;
         let messages = [];
         let currentOpenMessageId = null;
+        let activeTopicFilter = 'all';
 
         try {
             app = initializeApp(firebaseConfig);
@@ -213,6 +227,14 @@
                     if(updatedMsg) {
                         document.getElementById('detailTitle').textContent = updatedMsg.title;
                         document.getElementById('detailContent').textContent = updatedMsg.content;
+                        
+                        const topicBadge = document.getElementById('detailTopic');
+                        if (updatedMsg.topic) {
+                            topicBadge.textContent = updatedMsg.topic;
+                            topicBadge.classList.remove('hidden');
+                        } else {
+                            topicBadge.classList.add('hidden');
+                        }
                     } else {
                         window.showView('dashboard');
                     }
@@ -225,37 +247,63 @@
         window.renderDashboard = () => {
             const grid = document.getElementById('categoriesGrid');
             const empty = document.getElementById('emptyState');
+            const filterContainer = document.getElementById('topicFilters');
+            
+            // Build Filters
+            const topics = [...new Set(messages.map(m => m.topic).filter(Boolean))].sort();
+            
+            let filterHTML = `<button onclick="setTopicFilter('all')" class="px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors border ${activeTopicFilter === 'all' ? 'bg-app-red text-white border-app-red' : 'bg-app-card text-app-muted border-app-border hover:border-app-muted'}">Todos</button>`;
+            
+            topics.forEach(topic => {
+                filterHTML += `<button onclick="setTopicFilter('${topic}')" class="px-5 py-2 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors border ${activeTopicFilter === topic ? 'bg-app-red text-white border-app-red' : 'bg-app-card text-app-muted border-app-border hover:border-app-muted'}">${topic}</button>`;
+            });
+            
+            filterContainer.innerHTML = filterHTML;
+            
+            // Filter and Render Cards
             grid.innerHTML = '';
             
-            if (messages.length === 0) {
+            const filteredMessages = messages.filter(msg => {
+                if (activeTopicFilter !== 'all' && msg.topic !== activeTopicFilter) return false;
+                return true;
+            });
+            
+            if (filteredMessages.length === 0) {
                 grid.classList.add('hidden');
                 empty.classList.remove('hidden');
-                return;
-            }
-            
-            grid.classList.remove('hidden');
-            empty.classList.add('hidden');
-            
-            messages.forEach(msg => {
-                const card = document.createElement('div');
-                card.className = 'message-card group bg-app-card border border-app-border rounded p-6 hover:border-app-red/50 transition-colors cursor-pointer flex flex-col justify-between h-40';
-                card.onclick = () => window.openDetail(msg.id);
+            } else {
+                grid.classList.remove('hidden');
+                empty.classList.add('hidden');
                 
-                let snippet = msg.content.substring(0, 60);
-                if(msg.content.length > 60) snippet += '...';
+                filteredMessages.forEach(msg => {
+                    const card = document.createElement('div');
+                    card.className = 'message-card group bg-app-card border border-app-border rounded p-6 hover:border-app-red/50 transition-colors cursor-pointer flex flex-col justify-between h-[11.5rem]';
+                    card.setAttribute('data-topic', msg.topic || '');
+                    card.onclick = () => window.openDetail(msg.id);
+                    
+                    let snippet = msg.content.substring(0, 60);
+                    if(msg.content.length > 60) snippet += '...';
+                    
+                    const topicTag = msg.topic 
+                        ? `<span class="inline-block px-2 py-1 bg-app-border text-app-muted text-[10px] font-semibold rounded-full mb-3 uppercase tracking-wider">${msg.topic}</span>` 
+                        : `<div class="h-6 mb-3"></div>`; // spacer se não houver tag
 
-                card.innerHTML = `
-                    <div>
-                        <div class="text-app-gold mb-3 opacity-0 group-hover:opacity-100 transition-opacity transform -translate-y-1 group-hover:translate-y-0">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                    card.innerHTML = `
+                        <div>
+                            ${topicTag}
+                            <h3 class="text-white font-medium text-lg mb-2 truncate">${msg.title}</h3>
+                            <p class="text-app-muted text-sm font-light leading-relaxed">${snippet}</p>
                         </div>
-                        <h3 class="text-white font-medium text-lg mb-2 truncate">${msg.title}</h3>
-                        <p class="text-app-muted text-sm font-light leading-relaxed">${snippet}</p>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
+                    `;
+                    grid.appendChild(card);
+                });
+            }
             window.filterMessages();
+        };
+
+        window.setTopicFilter = (topic) => {
+            activeTopicFilter = topic;
+            renderDashboard();
         };
 
         window.filterMessages = () => {
@@ -264,7 +312,9 @@
             cards.forEach(card => {
                 const title = card.querySelector('h3').textContent.toLowerCase();
                 const content = card.querySelector('p').textContent.toLowerCase();
-                card.style.display = (title.includes(query) || content.includes(query)) ? 'flex' : 'none';
+                const topic = card.getAttribute('data-topic').toLowerCase();
+                
+                card.style.display = (title.includes(query) || content.includes(query) || topic.includes(query)) ? 'flex' : 'none';
             });
         };
 
@@ -285,6 +335,15 @@
             currentOpenMessageId = id;
             document.getElementById('detailTitle').textContent = msg.title;
             document.getElementById('detailContent').textContent = msg.content;
+            
+            const topicBadge = document.getElementById('detailTopic');
+            if (msg.topic) {
+                topicBadge.textContent = msg.topic;
+                topicBadge.classList.remove('hidden');
+            } else {
+                topicBadge.classList.add('hidden');
+            }
+            
             window.showView('detail');
         };
 
@@ -295,11 +354,13 @@
             if (editData) {
                 document.getElementById('modalTitle').textContent = 'Editar Mensagem';
                 document.getElementById('editId').value = editData.id;
+                document.getElementById('inputTopic').value = editData.topic || '';
                 document.getElementById('inputTitle').value = editData.title;
                 document.getElementById('inputContent').value = editData.content;
             } else {
                 document.getElementById('modalTitle').textContent = 'Nova Categoria';
                 document.getElementById('editId').value = '';
+                document.getElementById('inputTopic').value = '';
                 document.getElementById('inputTitle').value = '';
                 document.getElementById('inputContent').value = '';
             }
@@ -318,23 +379,24 @@
         };
 
         window.saveMessage = async () => {
+            const topic = document.getElementById('inputTopic').value.trim();
             const title = document.getElementById('inputTitle').value.trim();
             const content = document.getElementById('inputContent').value.trim();
             const id = document.getElementById('editId').value;
             const btn = document.getElementById('saveBtn');
             
-            if (!title || !content) return window.showToast('Preencha todos os campos.', true);
+            if (!title || !content) return window.showToast('Preencha Título e Conteúdo.', true);
             
             btn.disabled = true;
             btn.innerHTML = `<svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Salvando...`;
 
             try {
                 if (id) {
-                    await update(ref(db, 'messages/' + id), { title, content });
+                    await update(ref(db, 'messages/' + id), { topic, title, content });
                     window.showToast('Mensagem atualizada!');
                 } else {
                     const newMsgRef = push(ref(db, 'messages'));
-                    await set(newMsgRef, { title, content, createdAt: Date.now() });
+                    await set(newMsgRef, { topic, title, content, createdAt: Date.now() });
                     window.showToast('Mensagem criada!');
                 }
                 window.closeModal();
